@@ -1,0 +1,461 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pub Quiz Night</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Karla:wght@400;600;700&family=DM+Mono:wght@500&display=swap">
+<style>
+/* Layout: one centered column, a chalkboard "card" per screen; single dark look (pub chalkboard), committed on purpose */
+:root {
+  --board: #17302a;      /* bottle-green chalkboard */
+  --board-2: #1e3b34;    /* raised panel */
+  --line: #3a5a51;       /* chalk-dust rules */
+  --chalk: #f1ede1;      /* chalk white */
+  --chalk-dim: #a9b8b0;  /* faded chalk */
+  --brass: #e2b052;      /* brass tap handle accent */
+  --good: #7fd18b;
+  --bad: #f08a76;
+  --display: "Alfa Slab One", "Rockwell", "Georgia", serif;
+  --body: "Karla", "Helvetica Neue", Arial, sans-serif;
+  --mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { min-height: 100%; }
+body {
+  background: var(--board);
+  background-image: radial-gradient(ellipse at 30% 0%, rgba(255,255,255,.05), transparent 60%);
+  color: var(--chalk);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 48px; display: flex; flex-direction: column; gap: 20px; }
+h1, h2 { font-family: var(--display); font-weight: 400; letter-spacing: .01em; text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(2.2rem, 8vw, 3.4rem); }
+h2 { font-size: clamp(1.5rem, 5vw, 2rem); }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--brass); }
+.muted { color: var(--chalk-dim); }
+.panel { background: var(--board-2); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.rounds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.rounds div { border-top: 2px solid var(--brass); padding-top: 8px; font-size: .9rem; }
+.rounds b { display: block; font-family: var(--mono); font-weight: 500; color: var(--brass); font-size: .75rem; letter-spacing: .1em; }
+label { font-weight: 700; font-size: .9rem; }
+input[type=text] {
+  font: inherit; font-size: 1.1rem; color: var(--chalk); background: var(--board);
+  border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; width: 100%; box-sizing: border-box;
+}
+input[type=text]:focus { outline: 2px solid var(--brass); outline-offset: 1px; }
+button { font: inherit; cursor: pointer; }
+.btn {
+  background: var(--brass); color: #1b1608; border: 0; border-radius: 4px; padding: 13px 22px;
+  font-weight: 700; font-size: 1.05rem; align-self: flex-start;
+}
+.btn:hover { filter: brightness(1.07); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--chalk); border: 1px solid var(--line); }
+button:focus-visible { outline: 2px solid var(--chalk); outline-offset: 2px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.hint { font-size: .85rem; color: var(--chalk-dim); }
+
+/* question screen */
+.qhead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-family: var(--mono); font-size: .85rem; color: var(--chalk-dim); font-variant-numeric: tabular-nums; }
+.qhead .score { color: var(--brass); }
+.timer { height: 8px; background: var(--board); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.timer i { display: block; height: 100%; width: 100%; background: var(--brass); transform-origin: left; }
+.timer.low i { background: var(--bad); }
+.secs { font-family: var(--mono); font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.qtext { font-size: clamp(1.25rem, 4.2vw, 1.55rem); font-weight: 700; line-height: 1.3; text-wrap: balance; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .opts { grid-template-columns: 1fr; } }
+.opt {
+  text-align: left; background: var(--board); color: var(--chalk); border: 1px solid var(--line);
+  border-radius: 4px; padding: 14px 14px; font-size: 1rem; min-height: 56px; display: flex; gap: 10px; align-items: center;
+}
+.opt span.k { font-family: var(--mono); color: var(--brass); font-size: .85rem; }
+.opt:hover:not(:disabled) { border-color: var(--brass); }
+.opt:disabled { cursor: default; }
+.opt.right { border-color: var(--good); background: rgba(127,209,139,.14); }
+.opt.wrong { border-color: var(--bad); background: rgba(240,138,118,.14); }
+.verdict { min-height: 1.5em; font-weight: 700; }
+.verdict.good { color: var(--good); }
+.verdict.bad { color: var(--bad); }
+
+/* results */
+.big { font-family: var(--display); font-size: clamp(3rem, 14vw, 5rem); line-height: 1; color: var(--brass); }
+.big small { font-size: .4em; color: var(--chalk-dim); }
+.breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-variant-numeric: tabular-nums; }
+.breakdown div { border: 1px solid var(--line); border-radius: 4px; padding: 10px; text-align: center; }
+.breakdown b { display: block; font-family: var(--mono); font-size: 1.3rem; font-weight: 500; }
+.breakdown span { font-size: .78rem; color: var(--chalk-dim); }
+
+/* leaderboard */
+.board { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.board td { padding: 9px 6px; border-bottom: 1px dashed var(--line); }
+.board td.rank { font-family: var(--mono); color: var(--chalk-dim); width: 2.5em; }
+.board td.name { font-weight: 600; word-break: break-word; }
+.board td.pts { font-family: var(--mono); text-align: right; white-space: nowrap; }
+.board td.t { font-family: var(--mono); text-align: right; color: var(--chalk-dim); font-size: .82rem; white-space: nowrap; width: 4.5em; }
+.board tr.me td { color: var(--brass); }
+.board tr.me td.name::after { content: " (you)"; font-weight: 400; color: var(--chalk-dim); }
+.board tr:nth-child(1) td.rank { color: var(--brass); }
+.empty { color: var(--chalk-dim); font-size: .95rem; }
+.live { display: flex; flex-wrap: wrap; gap: 6px; }
+.live span { font-size: .82rem; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--chalk-dim); }
+.live span b { color: var(--chalk); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .timer i { transition: none !important; } }
+</style>
+
+<div class="wrap" id="app">
+  <!-- LOBBY -->
+  <section id="lobby" class="wrap" style="padding:0">
+    <div>
+      <p class="eyebrow">Tonight's quiz · 60 questions</p>
+      <h1>Pub Quiz Night</h1>
+    </div>
+    <p class="muted">Three rounds of twenty. You get 10 seconds per question. Answer fast, and your score lands on the shared leaderboard when you finish.</p>
+    <div class="rounds">
+      <div><b>ROUND 1</b>General Knowledge</div>
+      <div><b>ROUND 2</b>Sports &amp; Screen</div>
+      <div><b>ROUND 3</b>History &amp; Science</div>
+    </div>
+    <form class="panel" id="joinForm" autocomplete="off">
+      <label for="nick">Your name on the leaderboard</label>
+      <input type="text" id="nick" maxlength="24" placeholder="e.g. Quizzy McQuizface" required>
+      <button class="btn" id="startBtn" type="submit">Start quiz</button>
+      <p class="hint" id="saveNote">Ties are broken by total answer time.</p>
+    </form>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><h2 style="font-size:1.3rem">Leaderboard</h2><span class="hint" id="liveCount"></span></div>
+      <div class="live" id="liveList" hidden></div>
+      <div id="boardLobby"></div>
+    </div>
+  </section>
+
+  <!-- ROUND INTRO -->
+  <section id="intro" class="panel" hidden>
+    <p class="eyebrow" id="introEyebrow">Round 1 of 3</p>
+    <h2 id="introTitle">General Knowledge</h2>
+    <p class="muted" id="introSub">20 questions · 10 seconds each</p>
+    <button class="btn" id="goBtn" type="button">Start round</button>
+  </section>
+
+  <!-- QUESTION -->
+  <section id="question" class="panel" hidden>
+    <div class="qhead">
+      <span id="qPos">R1 · Q1/20</span>
+      <span class="score" id="qScore">Score 0</span>
+    </div>
+    <div class="row" style="gap:14px;flex-wrap:nowrap">
+      <div class="secs" id="secs">10</div>
+      <div class="timer" id="timer" style="flex:1"><i id="bar"></i></div>
+    </div>
+    <p class="qtext" id="qText"></p>
+    <div class="opts" id="opts"></div>
+    <p class="verdict" id="verdict" aria-live="polite"></p>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="wrap" style="padding:0" hidden>
+    <div>
+      <p class="eyebrow">Final score</p>
+      <div class="big"><span id="finalScore">0</span><small> / 60</small></div>
+      <p id="rankLine" style="font-size:1.15rem;font-weight:700;margin-top:6px"></p>
+      <p class="hint" id="saveStatus"></p>
+    </div>
+    <div class="breakdown" id="breakdown"></div>
+    <div class="panel">
+      <h2 style="font-size:1.3rem">Leaderboard</h2>
+      <div id="boardFinal"></div>
+    </div>
+    <button class="btn ghost" id="againBtn" type="button">Play again</button>
+  </section>
+</div>
+
+<script>
+const ROUNDS = [
+  { title: "General Knowledge", qs: [
+    ["What is the world's largest land mammal?", "African elephant", ["Hippopotamus","White rhinoceros","Giraffe"]],
+    ["Rio de Janeiro is a city in which South American country?", "Brazil", ["Argentina","Colombia","Peru"]],
+    ["Which Middle Eastern city is also the name of a type of artichoke?", "Jerusalem", ["Damascus","Baghdad","Beirut"]],
+    ["With which sport is Silverstone most associated?", "Motor racing", ["Horse racing","Golf","Cricket"]],
+    ["Nostradamus was famous for making what?", "Predictions", ["Maps","Telescopes","Medicines"]],
+    ["In mythology, Romulus and Remus were brought up by which animal?", "A wolf", ["A bear","An eagle","A goat"]],
+    ["What is the main source of vitamin C?", "Fruit", ["Red meat","Dairy","Grains"]],
+    ["Insulin is commonly used to treat which condition?", "Diabetes", ["Asthma","Epilepsy","High blood pressure"]],
+    ["The first atom bomb was dropped on which Japanese city?", "Hiroshima", ["Nagasaki","Tokyo","Osaka"]],
+    ["What is dermatophobia the fear of?", "Skin disease", ["Doctors","Dogs","Darkness"]],
+    ["The Velocipede was a 19th-century prototype of what?", "The bicycle", ["The car","The steam train","The typewriter"]],
+    ["Which is Britain's oldest Sunday newspaper, first published in 1791?", "The Observer", ["The Sunday Times","News of the World","The Mail on Sunday"]],
+    ["What was the middle name of Wolfgang Mozart?", "Amadeus", ["Ludwig","Friedrich","Sebastian"]],
+    ["What is the art of stuffing animals for preservation?", "Taxidermy", ["Topiary","Embalming","Lepidoptery"]],
+    ["The term bhp describes a motor vehicle's power. What does it stand for?", "Brake horsepower", ["Base horsepower","British horsepower","Boosted horsepower"]],
+    ["What is Prince William's second name?", "Arthur", ["George","Charles","Edward"]],
+    ["Who invented the Flying Shuttle in 1733?", "John Kay", ["James Hargreaves","Richard Arkwright","Samuel Crompton"]],
+    ["What does a Geiger counter measure?", "Radiation", ["Earthquakes","Air pressure","Wind speed"]],
+    ["If you held an LLD, what profession would you be in?", "Law", ["Medicine","Engineering","Theology"]],
+    ["How many of Henry VIII's wives were called Anne?", "Two", ["One","Three","None"]],
+  ]},
+  { title: "Sports & Screen", qs: [
+    ["The Claret Jug is awarded to the winner of which annual event?", "The Open (golf)", ["Wimbledon","The Masters","The Grand National"]],
+    ["In 1991, who became the first F1 driver to win the first four races of a season?", "Ayrton Senna", ["Alain Prost","Nigel Mansell","Michael Schumacher"]],
+    ["In which country were the first FIFA World Cup finals held, in 1930?", "Uruguay", ["Brazil","Italy","England"]],
+    ["Eugenio Monti won 11 bobsleigh world titles. What was his nationality?", "Italian", ["Swiss","Austrian","German"]],
+    ["In 2012 Lewis Hamilton left McLaren to drive for which team?", "Mercedes", ["Ferrari","Red Bull","Williams"]],
+    ["Who was named Sportsman of the Century in 1999 by both Sports Illustrated and the BBC?", "Muhammad Ali", ["Pelé","Michael Jordan","Jesse Owens"]],
+    ["Which country is regarded as the leading nation in polo?", "Argentina", ["England","India","USA"]],
+    ["Who scored a record 277 points at Rugby World Cups?", "Jonny Wilkinson", ["Dan Carter","Gavin Hastings","Michael Lynagh"]],
+    ["Which Ukrainian brothers both held world heavyweight boxing titles this century?", "The Klitschkos", ["The Usyks","The Lomachenkos","The Povetkins"]],
+    ["Who became the first Black player in Major League Baseball in 1947?", "Jackie Robinson", ["Hank Aaron","Willie Mays","Satchel Paige"]],
+    ["Which British actor died while still filming his role in Ridley Scott's Gladiator?", "Oliver Reed", ["Richard Harris","Derek Jacobi","David Hemmings"]],
+    ["Who played the title role in The Godfather (1972)?", "Marlon Brando", ["Al Pacino","Robert De Niro","James Caan"]],
+    ["Gene Hackman played which villain in the first Superman movie?", "Lex Luthor", ["General Zod","Brainiac","Otis"]],
+    ["Which British actor won a Golden Globe and an Emmy for HBO-era drama Homeland?", "Damian Lewis", ["David Harewood","Rupert Friend","Hugh Laurie"]],
+    ["Which film is about Freedonia declaring war on neighbouring Sylvania?", "Duck Soup", ["A Night at the Opera","Animal Crackers","Horse Feathers"]],
+    ["What is the name of the possessed girl played by Linda Blair in The Exorcist?", "Regan", ["Carrie","Samara","Esther"]],
+    ["Which 1970s Clint Eastwood thriller featured a serial killer called Scorpio?", "Dirty Harry", ["Magnum Force","The Enforcer","Escape from Alcatraz"]],
+    ["Who earned an Oscar nomination for playing Malcolm X?", "Denzel Washington", ["Morgan Freeman","Laurence Fishburne","Wesley Snipes"]],
+    ["Who was the star of I Am Legend?", "Will Smith", ["Tom Cruise","Matt Damon","Keanu Reeves"]],
+    ["What was Alex Haley's 1970s slave drama, still one of the most-watched in US TV history?", "Roots", ["North and South","The Blue and the Gray","Beloved"]],
+  ]},
+  { title: "History & Science", qs: [
+    ["On 1 August 1990, Iraqi troops invaded which neighbour, sparking the first Gulf War?", "Kuwait", ["Iran","Saudi Arabia","Syria"]],
+    ["On 19 August 1968, Soviet tanks rolled into which country?", "Czechoslovakia", ["Hungary","Poland","Yugoslavia"]],
+    ["In which month and year did Japan bomb Pearl Harbor?", "December 1941", ["June 1941","December 1942","September 1939"]],
+    ["In which year did the Battle of Waterloo take place?", "1815", ["1805","1812","1830"]],
+    ["Which volcano erupted in 1906, causing huge damage around Naples?", "Mount Vesuvius", ["Mount Etna","Stromboli","Campi Flegrei"]],
+    ["Which country became the first to give women the vote, in 1893?", "New Zealand", ["Australia","Finland","United Kingdom"]],
+    ["Who led the Gallic tribes against Julius Caesar's legions?", "Vercingetorix", ["Boudica","Arminius","Brennus"]],
+    ["The Soviet Union and seven other countries signed which treaty in 1955?", "The Warsaw Pact", ["NATO","The Molotov–Ribbentrop Pact","The Treaty of Rome"]],
+    ["What name is given to 8 May, marking Germany's surrender in WWII?", "VE Day", ["VJ Day","D-Day","Armistice Day"]],
+    ["Which country was invaded during Operation Barbarossa?", "The USSR", ["Poland","France","Norway"]],
+    ["Roughly how much of their DNA do humans and chimpanzees share?", "98.5%", ["77%","85%","92%"]],
+    ["What is a biological process that naturally runs on a 24-hour cycle?", "Circadian rhythm", ["Lunar rhythm","Metabolic cycle","Ultradian rhythm"]],
+    ["The chemical symbol Y denotes which uncommon metal?", "Yttrium", ["Ytterbium","Vanadium","Tungsten"]],
+    ["What is the unit of electrical charge?", "Coulomb", ["Ampere","Volt","Ohm"]],
+    ["What hard polymer was used in old telephones and electrical insulators?", "Bakelite", ["Celluloid","Nylon","Polystyrene"]],
+    ["After nitrogen and oxygen, what is the third most common gas in Earth's atmosphere?", "Argon", ["Carbon dioxide","Helium","Hydrogen"]],
+    ["Zn is the symbol of which chemical element?", "Zinc", ["Zirconium","Tin","Sodium"]],
+    ["Who gave his name to the SI unit of radioactivity?", "Henri Becquerel", ["Niels Bohr","Enrico Fermi","James Chadwick"]],
+    ["Who is best known for his theories about black holes?", "Stephen Hawking", ["Carl Sagan","Isaac Newton","Edwin Hubble"]],
+    ["Which English chemist discovered the most elements?", "Humphry Davy", ["John Dalton","Michael Faraday","Joseph Priestley"]],
+  ]},
+];
+const SECS = 10, TOTAL = ROUNDS.reduce((n, r) => n + r.qs.length, 0);
+
+const $ = id => document.getElementById(id);
+const screens = ["lobby", "intro", "question", "results"];
+function show(name) { screens.forEach(s => $(s).hidden = s !== name); window.scrollTo(0, 0); }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function fmtTime(ms) { return (ms / 1000).toFixed(1) + "s"; }
+
+// ---- shared state ----
+let db = null, room = null, user = null, myId = null, canSave = null;
+let dbScores = new Map();   // id -> {name, score, ms, r}
+let peers = [];
+const state = { nick: "", r: 0, q: 0, score: 0, roundScores: [0, 0, 0], ms: 0, done: false, playing: false };
+
+try { const n = localStorage.getItem("pq-nick"); if (n) $("nick").value = n; } catch (e) {}
+
+async function initShared() {
+  if (!window.claude?.use) return;
+  [db, room, user] = await Promise.all([claude.use("db"), claude.use("room"), claude.use("user")]);
+  if (user) {
+    try { myId = await user.id(); } catch (e) {}
+    try { canSave = await user.can("data.write"); } catch (e) {}
+  }
+  if (db) {
+    db.collection("scores").onSnapshot(snap => {
+      dbScores = new Map();
+      snap.docs.forEach(d => { const v = d.data(); if (v && typeof v.score === "number") dbScores.set(d.id, v); });
+      renderBoards();
+    }, () => {});
+  }
+  if (room) {
+    room.onPeers(ch => { peers = ch.peers; renderBoards(); renderLive(); }, () => {});
+  }
+  renderBoards();
+}
+initShared();
+
+function pushPresence() {
+  if (!room) return;
+  room.presence({ nick: state.nick, id: myId, score: state.score, answered: answeredCount(), done: state.done, ms: Math.round(state.ms) }).catch(() => {});
+}
+function answeredCount() { let n = 0; for (let i = 0; i < state.r; i++) n += ROUNDS[i].qs.length; return n + state.q; }
+
+function entries() {
+  const map = new Map();
+  dbScores.forEach((v, id) => map.set(id, { key: id, name: String(v.name || "Player").slice(0, 24), score: v.score, ms: v.ms || 0, me: id === myId }));
+  // finished players whose score didn't save (view-only access) still show while they're here
+  peers.forEach(p => {
+    const pr = p.presence || {};
+    if (!pr.done || typeof pr.score !== "number") return;
+    const key = p.by || pr.id || ("peer:" + pr.nick);
+    const cur = map.get(key);
+    if (!cur || pr.score > cur.score || (pr.score === cur.score && pr.ms < cur.ms))
+      map.set(key, { key, name: String(pr.nick || "Player").slice(0, 24), score: pr.score, ms: pr.ms || 0, me: !!p.isMe || key === myId });
+  });
+  // always include my own finished run
+  if (state.done) {
+    const key = myId || "me";
+    const cur = map.get(key);
+    if (!cur || state.score > cur.score || (state.score === cur.score && state.ms < cur.ms))
+      map.set(key, { key, name: state.nick, score: state.score, ms: Math.round(state.ms), me: true });
+    else cur.me = true;
+  }
+  return [...map.values()].sort((a, b) => b.score - a.score || a.ms - b.ms);
+}
+
+function boardHTML(list) {
+  if (!list.length) return '<p class="empty">No scores yet. Finish the quiz to claim the top spot.</p>';
+  let rank = 0, prev = null;
+  const rows = list.map((e, i) => {
+    if (!prev || e.score !== prev.score || e.ms !== prev.ms) rank = i + 1;
+    prev = e;
+    return `<tr class="${e.me ? "me" : ""}"><td class="rank">${rank}</td><td class="name">${esc(e.name)}</td><td class="pts">${e.score}/${TOTAL}</td><td class="t">${fmtTime(e.ms)}</td></tr>`;
+  }).join("");
+  return `<div style="overflow-x:auto"><table class="board"><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderBoards() {
+  const list = entries();
+  $("boardLobby").innerHTML = boardHTML(list);
+  $("boardFinal").innerHTML = boardHTML(list);
+  if (state.done) {
+    const i = list.findIndex(e => e.me);
+    if (i >= 0) {
+      const rank = list.filter(e => e.score > list[i].score || (e.score === list[i].score && e.ms < list[i].ms)).length + 1;
+      $("rankLine").textContent = `You're ranked #${rank} of ${list.length}`;
+    }
+  }
+}
+
+function renderLive() {
+  const playing = peers.filter(p => !p.isMe && p.presence && p.presence.nick && !p.presence.done);
+  const n = peers.length;
+  $("liveCount").textContent = n > 1 ? `${n} here now` : "";
+  $("liveList").hidden = !playing.length;
+  $("liveList").innerHTML = playing.map(p => `<span><b>${esc(p.presence.nick)}</b> · Q${Math.min(TOTAL, (p.presence.answered || 0) + 1)}</span>`).join("");
+}
+
+// ---- game flow ----
+$("joinForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const nick = $("nick").value.trim().slice(0, 24);
+  if (!nick) { $("nick").focus(); return; }
+  try { localStorage.setItem("pq-nick", nick); } catch (e) {}
+  Object.assign(state, { nick, r: 0, q: 0, score: 0, roundScores: [0, 0, 0], ms: 0, done: false, playing: true });
+  pushPresence();
+  showIntro();
+});
+$("againBtn").addEventListener("click", () => { show("lobby"); renderBoards(); });
+$("goBtn").addEventListener("click", () => { state.q = 0; askQuestion(); });
+
+function showIntro() {
+  const r = ROUNDS[state.r];
+  $("introEyebrow").textContent = `Round ${state.r + 1} of ${ROUNDS.length}`;
+  $("introTitle").textContent = r.title;
+  $("introSub").textContent = state.r === 0
+    ? `${r.qs.length} questions · 10 seconds each`
+    : `${r.qs.length} questions · you're on ${state.score} so far`;
+  show("intro");
+  $("goBtn").focus();
+}
+
+let timerRAF = 0, qStart = 0, locked = false, current = null;
+function askQuestion() {
+  const round = ROUNDS[state.r];
+  const [text, answer, wrong] = round.qs[state.q];
+  current = { answer, options: shuffle([answer, ...wrong]) };
+  $("qPos").textContent = `R${state.r + 1} · Q${state.q + 1}/${round.qs.length}`;
+  $("qScore").textContent = `Score ${state.score}`;
+  $("qText").textContent = text;
+  $("verdict").textContent = ""; $("verdict").className = "verdict";
+  $("opts").innerHTML = current.options.map((o, i) => `<button class="opt" type="button" data-i="${i}"><span class="k">${"ABCD"[i]}</span><span>${esc(o)}</span></button>`).join("");
+  $("opts").querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => answer_(+b.dataset.i)));
+  show("question");
+  locked = false;
+  qStart = performance.now();
+  cancelAnimationFrame(timerRAF);
+  const tick = () => {
+    const left = Math.max(0, SECS - (performance.now() - qStart) / 1000);
+    $("bar").style.transform = `scaleX(${left / SECS})`;
+    $("secs").textContent = Math.ceil(left);
+    $("timer").classList.toggle("low", left <= 3);
+    if (left <= 0) { answer_(-1); return; }
+    if (!locked) timerRAF = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+function answer_(i) {
+  if (locked) return;
+  locked = true;
+  cancelAnimationFrame(timerRAF);
+  const elapsed = Math.min(SECS * 1000, performance.now() - qStart);
+  state.ms += elapsed;
+  const btns = [...$("opts").querySelectorAll(".opt")];
+  btns.forEach(b => b.disabled = true);
+  const correctIdx = current.options.indexOf(current.answer);
+  btns[correctIdx].classList.add("right");
+  const v = $("verdict");
+  if (i === correctIdx) {
+    state.score++; state.roundScores[state.r]++;
+    v.textContent = "Correct!"; v.className = "verdict good";
+  } else {
+    if (i >= 0) btns[i].classList.add("wrong");
+    v.textContent = i < 0 ? `Time's up. It was ${current.answer}.` : `Not quite. It was ${current.answer}.`;
+    v.className = "verdict bad";
+  }
+  $("qScore").textContent = `Score ${state.score}`;
+  state.q++;
+  pushPresence();
+  setTimeout(next, 1400);
+}
+
+function next() {
+  if (state.q < ROUNDS[state.r].qs.length) return askQuestion();
+  state.r++; state.q = 0;
+  if (state.r < ROUNDS.length) return showIntro();
+  finish();
+}
+
+async function finish() {
+  state.done = true; state.playing = false;
+  state.r = ROUNDS.length - 1; state.q = ROUNDS[state.r].qs.length;
+  pushPresence();
+  $("finalScore").textContent = state.score;
+  $("breakdown").innerHTML = ROUNDS.map((r, i) => `<div><b>${state.roundScores[i]}/${r.qs.length}</b><span>${esc(r.title)}</span></div>`).join("");
+  $("rankLine").textContent = "";
+  show("results");
+  renderBoards();
+  await saveScore();
+}
+
+async function saveScore() {
+  const st = $("saveStatus");
+  if (!db || !myId || canSave === false) {
+    st.textContent = "Your score shows on the leaderboard while you keep this page open.";
+    return;
+  }
+  st.textContent = "Saving your score…";
+  try {
+    const ref = db.doc("scores/" + myId);
+    const prev = dbScores.get(myId);
+    const ms = Math.round(state.ms);
+    if (prev && (prev.score > state.score || (prev.score === state.score && prev.ms <= ms))) {
+      await ref.update({ name: state.nick });
+      st.textContent = `Saved. Your best is still ${prev.score}/${TOTAL}.`;
+    } else {
+      await ref.set({ name: state.nick, score: state.score, ms, r: state.roundScores, at: Date.now() });
+      st.textContent = "Score saved to the leaderboard.";
+    }
+  } catch (e) {
+    canSave = false;
+    st.textContent = "Your score shows on the leaderboard while you keep this page open.";
+  }
+}
+</script>
+
+</body></html>
