@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pop Culture Quiz Night</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Karla:wght@400;600;700&family=DM+Mono:wght@500&display=swap">
+<style>
+:root {
+  --board: #17302a; --board-2: #1e3b34; --line: #3a5a51;
+  --chalk: #f1ede1; --chalk-dim: #a9b8b0; --brass: #e2b052;
+  --good: #7fd18b; --bad: #f08a76;
+  --display: "Alfa Slab One", "Rockwell", Georgia, serif;
+  --body: "Karla", "Helvetica Neue", Arial, sans-serif;
+  --mono: "DM Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; margin: 0; }
+body { background: var(--board); background-image: radial-gradient(ellipse at 30% 0%, rgba(255,255,255,.05), transparent 60%); color: var(--chalk); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 48px; display: flex; flex-direction: column; gap: 20px; }
+section.wrap { padding: 0; }
+h1, h2 { font-family: var(--display); font-weight: 400; text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(2.2rem, 8vw, 3.4rem); }
+h2 { font-size: clamp(1.4rem, 5vw, 2rem); }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--brass); }
+.muted { color: var(--chalk-dim); }
+.panel { background: var(--board-2); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.rounds { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 10px; }
+.rounds div { border-top: 2px solid var(--brass); padding-top: 8px; font-size: .9rem; }
+.rounds b { display: block; font-family: var(--mono); font-weight: 500; color: var(--brass); font-size: .75rem; letter-spacing: .1em; }
+label { font-weight: 700; font-size: .9rem; }
+input[type=text] { font: inherit; font-size: 1.1rem; color: var(--chalk); background: var(--board); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; width: 100%; }
+input[type=text]:focus { outline: 2px solid var(--brass); outline-offset: 1px; }
+button { font: inherit; cursor: pointer; }
+.btn { background: var(--brass); color: #1b1608; border: 0; border-radius: 4px; padding: 13px 22px; font-weight: 700; font-size: 1.05rem; align-self: flex-start; }
+.btn:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; color: var(--chalk); border: 1px solid var(--line); }
+.btn.small { padding: 8px 14px; font-size: .9rem; }
+button:focus-visible { outline: 2px solid var(--chalk); outline-offset: 2px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.hint { font-size: .85rem; color: var(--chalk-dim); }
+.qhead { display: flex; justify-content: space-between; gap: 12px; font-family: var(--mono); font-size: .85rem; color: var(--chalk-dim); font-variant-numeric: tabular-nums; }
+.qhead .score { color: var(--brass); }
+.tbar { display: flex; gap: 14px; align-items: center; }
+.timer { flex: 1; height: 8px; background: var(--board); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.timer i { display: block; height: 100%; width: 100%; background: var(--brass); transform-origin: left; }
+.timer.low i { background: var(--bad); }
+.secs { font-family: var(--mono); font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; min-width: 1.4em; }
+.qtext { font-size: clamp(1.2rem, 4.2vw, 1.5rem); font-weight: 700; line-height: 1.3; text-wrap: balance; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .opts { grid-template-columns: 1fr; } }
+.opt { text-align: left; background: var(--board); color: var(--chalk); border: 1px solid var(--line); border-radius: 4px; padding: 14px; font-size: 1rem; min-height: 56px; display: flex; gap: 10px; align-items: center; }
+.opt .k { font-family: var(--mono); color: var(--brass); font-size: .85rem; }
+.opt:hover:not(:disabled) { border-color: var(--brass); }
+.opt:disabled { cursor: default; }
+.opt.right { border-color: var(--good); background: rgba(127,209,139,.14); }
+.opt.wrong { border-color: var(--bad); background: rgba(240,138,118,.14); }
+.verdict { font-weight: 700; }
+.verdict.good { color: var(--good); }
+.verdict.bad { color: var(--bad); }
+.explain { color: var(--chalk-dim); }
+.big { font-family: var(--display); font-size: clamp(3rem, 14vw, 5rem); line-height: 1; color: var(--brass); }
+.big small { font-size: .4em; color: var(--chalk-dim); }
+.breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; font-variant-numeric: tabular-nums; }
+.breakdown div { border: 1px solid var(--line); border-radius: 4px; padding: 10px; text-align: center; }
+.breakdown b { display: block; font-family: var(--mono); font-size: 1.3rem; font-weight: 500; }
+.breakdown span { font-size: .78rem; color: var(--chalk-dim); }
+.tablewrap { overflow-x: auto; }
+.board { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.board td { padding: 9px 6px; border-bottom: 1px dashed var(--line); }
+.board td.rank { font-family: var(--mono); color: var(--chalk-dim); width: 2.5em; }
+.board td.name { font-weight: 600; word-break: break-word; }
+.board td.pts { font-family: var(--mono); text-align: right; white-space: nowrap; }
+.board td.t { font-family: var(--mono); text-align: right; color: var(--chalk-dim); font-size: .82rem; white-space: nowrap; width: 4.5em; }
+.board tr.me td { color: var(--brass); }
+.board tr.me td.name::after { content: " (this run)"; font-weight: 400; color: var(--chalk-dim); }
+.empty { color: var(--chalk-dim); font-size: .95rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="lobby" class="wrap">
+    <div>
+      <p class="eyebrow">Quiz night · 25 questions</p>
+      <h1>Pop Culture Quiz Night</h1>
+    </div>
+    <p class="muted">Five rounds of five questions. You get 10 seconds per question. See your score, round by round, and your rank at the end.</p>
+    <div class="rounds" id="roundList"></div>
+    <form class="panel" id="joinForm" autocomplete="off">
+      <label for="nick">Your name</label>
+      <input type="text" id="nick" maxlength="24" placeholder="e.g. Quizzy McQuizface" required>
+      <button class="btn" type="submit">Start quiz</button>
+      <p class="hint">Ties are broken by total answer time.</p>
+    </form>
+    <div class="panel">
+      <h2 style="font-size:1.3rem">Leaderboard</h2>
+      <p class="hint">Scores played on this device.</p>
+      <div id="boardLobby"></div>
+    </div>
+  </section>
+
+  <section id="intro" class="panel" hidden>
+    <p class="eyebrow" id="introEyebrow"></p>
+    <h2 id="introTitle"></h2>
+    <p class="muted" id="introSub"></p>
+    <button class="btn" id="goBtn" type="button">Start round</button>
+  </section>
+
+  <section id="question" class="panel" hidden>
+    <div class="qhead"><span id="qPos"></span><span class="score" id="qScore"></span></div>
+    <div class="tbar"><div class="secs" id="secs">10</div><div class="timer" id="timer"><i id="bar"></i></div></div>
+    <p class="qtext" id="qText"></p>
+    <div class="opts" id="opts"></div>
+    <div id="feedback" hidden>
+      <p class="verdict" id="verdict" aria-live="polite"></p>
+      <p class="explain" id="explain"></p>
+    </div>
+    <button class="btn" id="nextBtn" type="button" hidden>Next</button>
+  </section>
+
+  <section id="results" class="wrap" hidden>
+    <div>
+      <p class="eyebrow">Final score</p>
+      <div class="big"><span id="finalScore">0</span><small id="finalTotal"> / 25</small></div>
+      <p id="rankLine" style="font-size:1.15rem;font-weight:700;margin-top:6px"></p>
+    </div>
+    <div class="breakdown" id="breakdown"></div>
+    <div class="panel">
+      <div class="row"><h2 style="font-size:1.3rem">Leaderboard</h2><button class="btn ghost small" id="clearBtn" type="button">Clear scores</button></div>
+      <p class="hint">Scores played on this device.</p>
+      <div id="boardFinal"></div>
+    </div>
+    <button class="btn ghost" id="againBtn" type="button">Play again</button>
+  </section>
+</div>
+
+<script>
+const ALL = [{"q": "Which famous plumber with a red hat and mustache serves as Nintendo's primary corporate mascot?", "o": ["Luigi", "Mario", "Yoshi", "Toad"], "a": 1, "e": "Mario is Nintendo's iconic red-hatted hero."}, {"q": "What is widely recognized as the single best-selling video game of all time?", "o": ["Grand Theft Auto V", "Tetris", "Minecraft", "Super Mario Bros."], "a": 2, "e": "Minecraft holds the crown with hundreds of millions of copies sold worldwide."}, {"q": "In the game Minecraft, what rare and durable ore is required to upgrade diamond armor and tools to their maximum potential?", "o": ["Netherite", "Obsidian", "Redstone", "Emerald"], "a": 0, "e": "Netherite is forged by combining netherite scrap with gold ingots."}, {"q": "Which acclaimed game development studio created the 2018 Norse-mythology action-adventure masterpiece God of War?", "o": ["Naughty Dog", "Insomniac Games", "Bungie", "Santa Monica Studio"], "a": 3, "e": "Santa Monica Studio developed the critically acclaimed 2018 soft-reboot of God of War."}, {"q": "What is the name of the fictional continent where Geralt of Rivia adventures in The Witcher 3: Wild Hunt?", "o": ["Tamriel", "The Continent", "Hyrule", "Lordran"], "a": 1, "e": "In Andrzej Sapkowski's lore and the games, the main landmass is simply referred to as \"The Continent\"."}, {"q": "Which visionary filmmaker directed the groundbreaking 1993 dinosaur sci-fi classic Jurassic Park?", "o": ["James Cameron", "Ridley Scott", "Steven Spielberg", "George Lucas"], "a": 2, "e": "Steven Spielberg brought Michael Crichton's dinosaurs roaring to life."}, {"q": "In Peter Jackson's The Lord of the Rings trilogy, what is the name of the loyal hobbit who accompanies Frodo Baggins all the way to Mount Doom?", "o": ["Samwise Gamgee", "Peregrin Took", "Meriadoc Brandybuck", "Bilbo Baggins"], "a": 0, "e": "Samwise proves to be the ultimate steadfast companion and friend."}, {"q": "Which celebrated Studio Ghibli animated film follows a young girl named Chihiro as she navigates a magical and bizarre bathhouse spirit world?", "o": ["My Neighbor Totoro", "Princess Mononoke", "Howl's Moving Castle", "Spirited Away"], "a": 3, "e": "Spirited Away won the Academy Award for Best Animated Feature."}, {"q": "What is the name of the incredibly strong and versatile fictional metal native to Black Panther’s homeland of Wakanda?", "o": ["Adamantium", "Vibranium", "Unobtanium", "Mithril"], "a": 1, "e": "Vibranium absorbs kinetic energy and makes up Captain America's shield and Black Panther's suit."}, {"q": "Which classic 1942 romantic drama starring Humphrey Bogart and Ingrid Bergman is set during World War II in a Moroccan city?", "o": ["Citizen Kane", "Sunset Boulevard", "Casablanca", "The Maltese Falcon"], "a": 2, "e": "Casablanca is renowned for its immortal dialogue, characters, and Rick's Café Américain."}, {"q": "What is the chemical symbol for the element gold on the periodic table?", "o": ["Au", "Ag", "Gd", "Go"], "a": 0, "e": "Au comes from aurum, the Latin word for gold meaning \"shining dawn\"."}, {"q": "Which planet in our solar system is famously known as the Red Planet due to iron oxide on its surface?", "o": ["Venus", "Mercury", "Jupiter", "Mars"], "a": 3, "e": "Mars appears red because of abundant rust (iron oxide) covering its terrain."}, {"q": "What essential gas do green plants absorb from the Earth's atmosphere during the process of photosynthesis?", "o": ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], "a": 1, "e": "Plants take in carbon dioxide and use sunlight to convert it into sugars."}, {"q": "Which sub-cellular structure is widely known as the \"powerhouse of the cell\" because it generates most of the cellular energy (ATP)?", "o": ["Ribosome", "Nucleus", "Mitochondrion", "Golgi Apparatus"], "a": 2, "e": "Mitochondria perform cellular respiration to produce energy packets (ATP)."}, {"q": "At what exact temperature in degrees Celsius does pure water freeze at standard atmospheric pressure?", "o": ["0 °C", "32 °C", "100 °C", "-10 °C"], "a": 0, "e": "0 degrees Celsius marks the melting and freezing point of water under normal conditions."}, {"q": "Which global superstar shattered attendance and revenue records with her career-spanning Eras Tour?", "o": ["Beyoncé", "Lady Gaga", "Madonna", "Taylor Swift"], "a": 3, "e": "Taylor Swift's Eras Tour became a monumental cultural and economic phenomenon."}, {"q": "What popular streaming platform produced the nostalgic 1980s-inspired sci-fi thriller series Stranger Things?", "o": ["Disney+", "Netflix", "Amazon Prime Video", "Max"], "a": 1, "e": "Netflix launched Stranger Things into a massive worldwide hit."}, {"q": "Which soulful British powerhouse singer released the record-shattering 2011 smash hit album 21 and the song \"Rolling in the Deep\"?", "o": ["Amy Winehouse", "Dua Lipa", "Adele", "Florence Welch"], "a": 2, "e": "Adele's albums are famously named after her milestone ages."}, {"q": "What viral short-form video social media app was originally known by the name Musical.ly before rebranding?", "o": ["TikTok", "Instagram Reels", "Snapchat", "Vine"], "a": 0, "e": "ByteDance acquired Musical.ly and merged it into TikTok."}, {"q": "Which comedy legend famously voices the lovable, chatty character Donkey in the Shrek movie franchise?", "o": ["Chris Rock", "Kevin Hart", "Will Smith", "Eddie Murphy"], "a": 3, "e": "Eddie Murphy gave Donkey his unforgettable voice and comedic timing."}, {"q": "In which pivotal year did the Berlin Wall fall, signaling the impending collapse of the Iron Curtain and the end of the Cold War?", "o": ["1975", "1989", "1991", "1961"], "a": 1, "e": "November 9, 1989 saw the opening of the Berlin border and the joyful dismantling of the wall."}, {"q": "Who served as the first President of the United States under the U.S. Constitution?", "o": ["Thomas Jefferson", "Benjamin Franklin", "George Washington", "John Adams"], "a": 2, "e": "George Washington was unanimously elected as the first U.S. President in 1789."}, {"q": "The magnificent ancient civilization of the pharaohs, pyramids, and hieroglyphics flourished along the banks of which major river?", "o": ["Nile River", "Tigris River", "Amazon River", "Indus River"], "a": 0, "e": "Ancient Egypt was often called the \"gift of the Nile\" because the river provided life-sustaining floods and fertile silt."}, {"q": "Which brilliant French military commander and emperor crowned himself Emperor of the French at Notre-Dame Cathedral in 1804?", "o": ["Louis XIV", "Charlemagne", "Maximilien Robespierre", "Napoleon Bonaparte"], "a": 3, "e": "Napoleon reshaped European history and law with the Napoleonic Code before his eventual defeat at Waterloo."}, {"q": "The historic Apollo 11 mission successfully landed the first humans on the Moon in which calendar year?", "o": ["1965", "1969", "1972", "1959"], "a": 1, "e": "Neil Armstrong took his famous \"one small step for man\" in July 1969."}];
+const ROUNDS = [
+  { title: "Video Games", qs: ALL.slice(0, 5) },
+  { title: "Movies", qs: ALL.slice(5, 10) },
+  { title: "Science", qs: ALL.slice(10, 15) },
+  { title: "Music & Pop Culture", qs: ALL.slice(15, 20) },
+  { title: "History", qs: ALL.slice(20, 25) },
+];
+const SECS = 10, TOTAL = ALL.length, KEY = "pop-quiz-scores";
+const $ = id => document.getElementById(id);
+const screens = ["lobby", "intro", "question", "results"];
+function show(n) { screens.forEach(s => $(s).hidden = s !== n); window.scrollTo(0, 0); }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function fmt(ms) { return (ms / 1000).toFixed(1) + "s"; }
+
+function loadScores() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
+function saveScores(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {} }
+let scores = loadScores(), myRunId = null;
+
+$("roundList").innerHTML = ROUNDS.map((r, i) => `<div><b>ROUND ${i + 1}</b>${esc(r.title)}</div>`).join("");
+$("finalTotal").textContent = " / " + TOTAL;
+try { const n = localStorage.getItem("pop-quiz-nick"); if (n) $("nick").value = n; } catch (e) {}
+
+function sorted() { return scores.slice().sort((a, b) => b.score - a.score || a.ms - b.ms); }
+function boardHTML() {
+  const list = sorted();
+  if (!list.length) return '<p class="empty">No scores yet. Finish the quiz to claim the top spot.</p>';
+  return '<div class="tablewrap"><table class="board"><tbody>' + list.slice(0, 20).map((e, i) =>
+    `<tr class="${e.id === myRunId ? "me" : ""}"><td class="rank">${i + 1}</td><td class="name">${esc(e.name)}</td><td class="pts">${e.score}/${TOTAL}</td><td class="t">${fmt(e.ms)}</td></tr>`
+  ).join("") + "</tbody></table></div>";
+}
+function renderBoards() { $("boardLobby").innerHTML = boardHTML(); $("boardFinal").innerHTML = boardHTML(); }
+renderBoards();
+
+const state = { nick: "", r: 0, q: 0, score: 0, roundScores: [], ms: 0 };
+
+$("joinForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const nick = $("nick").value.trim().slice(0, 24);
+  if (!nick) return;
+  try { localStorage.setItem("pop-quiz-nick", nick); } catch (e) {}
+  Object.assign(state, { nick, r: 0, q: 0, score: 0, roundScores: ROUNDS.map(() => 0), ms: 0 });
+  myRunId = null;
+  showIntro();
+});
+$("goBtn").addEventListener("click", () => { state.q = 0; ask(); });
+$("nextBtn").addEventListener("click", () => next());
+$("againBtn").addEventListener("click", () => { show("lobby"); renderBoards(); });
+let clearArmed = false;
+$("clearBtn").addEventListener("click", () => {
+  if (!clearArmed) { clearArmed = true; $("clearBtn").textContent = "Tap again to clear"; setTimeout(() => { clearArmed = false; $("clearBtn").textContent = "Clear scores"; }, 3000); return; }
+  scores = []; saveScores(scores); clearArmed = false; $("clearBtn").textContent = "Clear scores"; renderBoards(); $("rankLine").textContent = "";
+});
+
+function showIntro() {
+  const r = ROUNDS[state.r];
+  $("introEyebrow").textContent = `Round ${state.r + 1} of ${ROUNDS.length}`;
+  $("introTitle").textContent = r.title;
+  $("introSub").textContent = state.r === 0 ? `${r.qs.length} questions · 10 seconds each` : `${r.qs.length} questions · you're on ${state.score} so far`;
+  show("intro"); $("goBtn").focus();
+}
+
+let raf = 0, t0 = 0, locked = false, autoNext = 0;
+function ask() {
+  const round = ROUNDS[state.r], q = round.qs[state.q];
+  $("qPos").textContent = `R${state.r + 1} · Q${state.q + 1}/${round.qs.length}`;
+  $("qScore").textContent = `Score ${state.score}`;
+  $("qText").textContent = q.q;
+  $("feedback").hidden = true; $("nextBtn").hidden = true;
+  $("opts").innerHTML = q.o.map((o, i) => `<button class="opt" type="button" data-i="${i}"><span class="k">${"ABCD"[i]}</span><span>${esc(o)}</span></button>`).join("");
+  $("opts").querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => answer(+b.dataset.i)));
+  show("question");
+  locked = false; t0 = performance.now();
+  cancelAnimationFrame(raf);
+  const tick = () => {
+    const left = Math.max(0, SECS - (performance.now() - t0) / 1000);
+    $("bar").style.transform = `scaleX(${left / SECS})`;
+    $("secs").textContent = Math.ceil(left);
+    $("timer").classList.toggle("low", left <= 3);
+    if (left <= 0) return answer(-1);
+    if (!locked) raf = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+function answer(i) {
+  if (locked) return;
+  locked = true; cancelAnimationFrame(raf);
+  state.ms += Math.min(SECS * 1000, performance.now() - t0);
+  const q = ROUNDS[state.r].qs[state.q];
+  const btns = [...$("opts").querySelectorAll(".opt")];
+  btns.forEach(b => b.disabled = true);
+  btns[q.a].classList.add("right");
+  const v = $("verdict");
+  if (i === q.a) { state.score++; state.roundScores[state.r]++; v.textContent = "Correct!"; v.className = "verdict good"; }
+  else {
+    if (i >= 0) btns[i].classList.add("wrong");
+    v.textContent = (i < 0 ? "Time's up. " : "Not quite. ") + `It was ${q.o[q.a]}.`;
+    v.className = "verdict bad";
+  }
+  $("explain").textContent = q.e;
+  $("feedback").hidden = false; $("nextBtn").hidden = false; $("nextBtn").focus();
+  $("qScore").textContent = `Score ${state.score}`;
+  clearTimeout(autoNext); autoNext = setTimeout(next, 5000);
+}
+
+function next() {
+  clearTimeout(autoNext);
+  if ($("question").hidden) return;
+  state.q++;
+  if (state.q < ROUNDS[state.r].qs.length) return ask();
+  state.r++; state.q = 0;
+  if (state.r < ROUNDS.length) return showIntro();
+  finish();
+}
+
+function finish() {
+  const ms = Math.round(state.ms);
+  myRunId = Date.now() + "-" + Math.random().toString(36).slice(2, 7);
+  scores.push({ id: myRunId, name: state.nick, score: state.score, ms, at: Date.now() });
+  saveScores(scores);
+  $("finalScore").textContent = state.score;
+  $("breakdown").innerHTML = ROUNDS.map((r, i) => `<div><b>${state.roundScores[i]}/${r.qs.length}</b><span>${esc(r.title)}</span></div>`).join("");
+  const list = sorted(), rank = list.findIndex(e => e.id === myRunId) + 1;
+  $("rankLine").textContent = `You're ranked #${rank} of ${list.length}`;
+  renderBoards();
+  show("results");
+}
+</script>
+</body>
+</html>
